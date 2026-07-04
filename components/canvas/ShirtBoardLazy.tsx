@@ -7,7 +7,7 @@ const ShirtBoardLazy = dynamic(() => import("./ShirtBoard"), {
   loading: () => (
     <div
       className="w-full animate-pulse rounded-3xl bg-slate-200/60"
-      style={{ aspectRatio: "1000 / 1150" }}
+      style={{ aspectRatio: "1000 / 1000" }}
     />
   ),
 });

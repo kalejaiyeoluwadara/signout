@@ -31,6 +31,7 @@ export default function SignExperience({
   const [color, setColor] = useState<string>(INK_COLORS[0]);
   const [size, setSize] = useState<number>(BRUSH_SIZES[1]);
   const [tool, setTool] = useState<Tool>("draw");
+  const [textRotation, setTextRotation] = useState<number>(0);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
 
@@ -171,6 +172,8 @@ export default function SignExperience({
                 tool={tool}
                 color={color}
                 size={size}
+                textRotation={textRotation}
+                setTextRotation={setTextRotation}
               />
             </div>
             <div className="mt-4 flex justify-center">
@@ -192,6 +195,8 @@ export default function SignExperience({
                 setTool={setTool}
                 onUndo={undo}
                 canUndo={currentMarks.length > 0}
+                textRotation={textRotation}
+                setTextRotation={setTextRotation}
               />
               <button
                 onClick={save}

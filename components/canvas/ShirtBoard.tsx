@@ -7,7 +7,7 @@ import type { KonvaEventObject } from "konva/lib/Node";
 import type { Mark, TextItem, Tool } from "@/lib/types";
 
 export const BASE_W = 1000;
-export const BASE_H = 1150;
+export const BASE_H = 1000;
 
 type Props = {
   savedMarks: Mark[];
@@ -16,6 +16,8 @@ type Props = {
   tool: Tool;
   color: string;
   size: number;
+  textRotation: number;
+  setTextRotation: (r: number) => void;
 };
 
 /* Marker-ink look: multiply blending sinks the ink into the fabric shading,
@@ -80,8 +82,11 @@ export default function ShirtBoard({
   tool,
   color,
   size,
+  textRotation,
+  setTextRotation,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
   const savedLayerRef = useRef<Konva.Layer>(null);
   const liveLayerRef = useRef<Konva.Layer>(null);
   const drawingRef = useRef(false);
@@ -102,9 +107,16 @@ export default function ShirtBoard({
   } | null>(null);
   const [draft, setDraft] = useState("");
 
+  const handleBlur = (e: React.FocusEvent) => {
+    if (e.relatedTarget && editorRef.current?.contains(e.relatedTarget as Node)) {
+      return;
+    }
+    commitDraft();
+  };
+
   useEffect(() => {
     const img = new window.Image();
-    img.src = "/shirt.svg";
+    img.src = "/shirt.png";
     img.onload = () => setShirtImg(img);
   }, []);
 
@@ -176,7 +188,7 @@ export default function ShirtBoard({
             text,
             color,
             fontSize: size * 3.2,
-            rotate: (Math.random() - 0.5) * 8,
+            rotate: textRotation,
           },
         },
       ]);
@@ -285,28 +297,70 @@ export default function ShirtBoard({
       )}
 
       {pendingText && (
-        <input
-          autoFocus
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commitDraft}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") commitDraft();
-            if (e.key === "Escape") {
-              setPendingText(null);
-              setDraft("");
-            }
-          }}
-          maxLength={140}
-          placeholder="Type your message…"
-          className="font-hand absolute z-10 min-w-[140px] rounded-md border border-violet-300 bg-white/95 px-2 py-1 shadow-md outline-none"
+        <div
+          ref={editorRef}
+          className="absolute z-10 flex flex-col gap-2"
           style={{
             left: pendingText.left,
             top: pendingText.top - size * 3.2 * scale * 0.8,
-            fontSize: Math.max(14, size * 3.2 * scale),
-            color,
           }}
-        />
+        >
+          <input
+            autoFocus
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitDraft();
+              if (e.key === "Escape") {
+                setPendingText(null);
+                setDraft("");
+              }
+            }}
+            maxLength={140}
+            placeholder="Type your message…"
+            className="font-hand rounded-md border border-violet-300 bg-white/95 px-2.5 py-1.5 shadow-md outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+            style={{
+              fontSize: Math.max(14, size * 3.2 * scale),
+              color,
+              transform: `rotate(${textRotation}deg)`,
+              transformOrigin: "left center",
+              minWidth: "160px",
+              transition: "transform 0.1s ease",
+            }}
+          />
+          
+          <div
+            className="flex items-center gap-1 bg-white/95 border border-slate-200/80 rounded-full px-2 py-1 shadow-md self-start text-xs font-semibold text-slate-600"
+            onMouseDown={(e) => e.preventDefault()}
+            onTouchStart={(e) => e.preventDefault()}
+          >
+            <button
+              onClick={() => setTextRotation(Math.max(-90, textRotation - 15))}
+              className="flex h-5 w-5 items-center justify-center rounded-full hover:bg-slate-100 active:scale-95 transition-all text-xs font-bold"
+              title="Rotate counter-clockwise 15°"
+            >
+              ↺
+            </button>
+            <span className="font-mono text-[9px] font-bold text-violet-600 min-w-8 text-center select-none">
+              {textRotation}°
+            </span>
+            <button
+              onClick={() => setTextRotation(Math.min(90, textRotation + 15))}
+              className="flex h-5 w-5 items-center justify-center rounded-full hover:bg-slate-100 active:scale-95 transition-all text-xs font-bold"
+              title="Rotate clockwise 15°"
+            >
+              ↻
+            </button>
+            <div className="h-3 w-[1px] bg-slate-200 mx-0.5" />
+            <button
+              onClick={() => setTextRotation(0)}
+              className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-slate-500 hover:bg-slate-200"
+            >
+              0°
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -30,7 +30,7 @@ export default function CopyLinkButton({
 
   return (
     <button onClick={copy} className={`${base} ${styles}`}>
-      <span aria-hidden>{copied ? "✓" : "🔗"}</span>
+      <span aria-hidden>{copied ? "✓" : ""}</span>
       {copied ? "Copied!" : "Copy Link"}
     </button>
   );

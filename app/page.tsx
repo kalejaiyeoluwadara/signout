@@ -65,12 +65,13 @@ export default function LandingPage() {
 
           <div className="relative mx-auto w-full max-w-md lg:max-w-lg">
             <div className="rounded-[2.5rem] bg-linear-to-b from-white to-slate-100/60 p-6 shadow-[0_30px_80px_-25px_rgba(80,70,180,0.35)]">
-              <div className="relative" style={{ aspectRatio: "1000 / 1150" }}>
+              <div className="relative" style={{ aspectRatio: "1000 / 1000" }}>
                 <Image
-                  src="/shirt.svg"
+                  src="/shirt.png"
                   alt="A white signout shirt covered in signatures"
                   fill
                   priority
+                  className="object-contain"
                 />
                 {doodles.map((d, i) => (
                   <span
