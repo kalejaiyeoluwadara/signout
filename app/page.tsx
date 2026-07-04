@@ -20,16 +20,6 @@ const steps = [
   },
 ];
 
-const doodles = [
-  { text: "You did it bro! 🎓", color: "#7c3aed", top: "16%", left: "20%", rotate: "-8deg" },
-  { text: "Proud of you always!", color: "#1a1a1a", top: "30%", left: "40%", rotate: "-3deg" },
-  { text: "More wins ahead 🔥", color: "#dc2626", top: "20%", left: "56%", rotate: "6deg" },
-  { text: "Keep shining legend!", color: "#16a34a", top: "44%", left: "22%", rotate: "-10deg" },
-  { text: "The world is yours!", color: "#2563eb", top: "54%", left: "40%", rotate: "2deg" },
-  { text: "We go far! 💯", color: "#1a1a1a", top: "42%", left: "60%", rotate: "8deg" },
-  { text: "Unstoppable always ⭐", color: "#7c3aed", top: "66%", left: "50%", rotate: "-4deg" },
-  { text: "OG! Nothing less ✌️", color: "#16a34a", top: "74%", left: "28%", rotate: "-6deg" },
-];
 
 export default function LandingPage() {
   return (
@@ -65,30 +55,14 @@ export default function LandingPage() {
 
           <div className="relative mx-auto w-full max-w-md lg:max-w-lg">
             <div className="rounded-[2.5rem] bg-linear-to-b from-white to-slate-100/60 p-6 shadow-[0_30px_80px_-25px_rgba(80,70,180,0.35)]">
-              <div className="relative" style={{ aspectRatio: "1000 / 1000" }}>
+              <div className="relative overflow-hidden rounded-3xl" style={{ aspectRatio: "1 / 1" }}>
                 <Image
-                  src="/shirt.png"
-                  alt="A white signout shirt covered in signatures"
+                  src="/hero-shirt.png"
+                  alt="A white signout shirt covered in colorful signatures and doodles"
                   fill
                   priority
-                  className="object-contain"
+                  className="object-cover"
                 />
-                {doodles.map((d, i) => (
-                  <span
-                    key={i}
-                    className="font-hand absolute whitespace-nowrap text-lg font-semibold sm:text-xl"
-                    style={{
-                      top: d.top,
-                      left: d.left,
-                      color: d.color,
-                      transform: `rotate(${d.rotate})`,
-                      mixBlendMode: "multiply",
-                      opacity: 0.9,
-                    }}
-                  >
-                    {d.text}
-                  </span>
-                ))}
               </div>
             </div>
           </div>
