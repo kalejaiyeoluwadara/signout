@@ -17,7 +17,7 @@ export type Mark =
   | { kind: "stroke"; stroke: Stroke }
   | { kind: "text"; item: TextItem };
 
-export type Tool = "draw" | "text" | "eraser";
+export type Tool = "draw" | "text" | "stamp" | "eraser";
 
 export const INK_COLORS = [
   "#1a1a1a",

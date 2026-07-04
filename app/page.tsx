@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Logo from "@/components/Logo";
 import CreateShirtForm from "@/components/CreateShirtForm";
+import LoginForm from "@/components/LoginForm";
 
 const steps = [
   {
@@ -48,8 +49,9 @@ export default function LandingPage() {
               shirt with markers — reimagined online. One link, endless
               signatures, memories that never fade or wash out.
             </p>
-            <div className="mt-8">
+            <div className="mt-8 flex flex-col gap-4">
               <CreateShirtForm />
+              <LoginForm />
             </div>
           </div>
 

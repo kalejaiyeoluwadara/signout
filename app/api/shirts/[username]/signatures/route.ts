@@ -7,6 +7,16 @@ const MAX_STROKES = 200;
 const MAX_POINTS = 5000;
 const MAX_TEXTS = 40;
 const MAX_TEXT_LEN = 140;
+// Slightly above the client cap (1400) to allow for rounding
+const MAX_STROKE_PATH_LEN = 1600;
+
+function pathLength(points: number[]) {
+  let len = 0;
+  for (let i = 2; i < points.length; i += 2) {
+    len += Math.hypot(points[i] - points[i - 2], points[i + 1] - points[i - 1]);
+  }
+  return len;
+}
 
 type Params = { params: Promise<{ username: string }> };
 
@@ -53,6 +63,12 @@ export async function POST(req: Request, { params }: Params) {
         s.size > 40
       ) {
         return NextResponse.json({ error: "Invalid stroke data." }, { status: 400 });
+      }
+      if (pathLength(s.points) > MAX_STROKE_PATH_LEN) {
+        return NextResponse.json(
+          { error: "One of your strokes is too long — please keep strokes short." },
+          { status: 400 }
+        );
       }
     }
     for (const t of texts) {

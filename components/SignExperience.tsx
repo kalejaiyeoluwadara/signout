@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import ShirtBoard from "@/components/canvas/ShirtBoardLazy";
 import Toolbar from "@/components/Toolbar";
@@ -9,6 +9,7 @@ import Logo from "@/components/Logo";
 import Spinner from "@/components/Spinner";
 import { toast } from "@/components/toast/Toaster";
 import { INK_COLORS, BRUSH_SIZES, type Mark, type Tool } from "@/lib/types";
+import type { StampId } from "@/lib/stamps";
 
 type Props = {
   mode: "owner" | "visitor";
@@ -27,14 +28,31 @@ export default function SignExperience({
   initialMarks,
   initialCount,
 }: Props) {
+  const MAX_SIGNS_PER_USER = 2;
+  const storageKey = `signout_sigs_${username}`;
+
   const [savedMarks, setSavedMarks] = useState<Mark[]>(initialMarks);
   const [currentMarks, setCurrentMarks] = useState<Mark[]>([]);
   const [count, setCount] = useState(initialCount);
   const [color, setColor] = useState<string>(INK_COLORS[0]);
   const [size, setSize] = useState<number>(BRUSH_SIZES[1]);
   const [tool, setTool] = useState<Tool>("draw");
+  const [stamp, setStamp] = useState<StampId>("heart");
   const [textRotation, setTextRotation] = useState<number>(0);
   const [saving, setSaving] = useState(false);
+  const [mySignCount, setMySignCount] = useState(0);
+  const stageRef = useRef<import("konva").default.Stage | null>(null);
+
+  // Read this user's signature count from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) setMySignCount(parseInt(stored, 10) || 0);
+    } catch { /* localStorage unavailable */ }
+  }, [storageKey]);
+
+  const reachedLimit = mySignCount >= MAX_SIGNS_PER_USER;
+  const remainingSigns = MAX_SIGNS_PER_USER - mySignCount;
 
   const undo = useCallback(() => {
     setCurrentMarks((prev) => prev.slice(0, -1));
@@ -52,7 +70,7 @@ export default function SignExperience({
   }, [undo]);
 
   const save = async () => {
-    if (currentMarks.length === 0 || saving) return;
+    if (currentMarks.length === 0 || saving || reachedLimit) return;
     setSaving(true);
     try {
       const res = await fetch(`/api/shirts/${username}/signatures`, {
@@ -68,6 +86,9 @@ export default function SignExperience({
       setSavedMarks((prev) => [...prev, ...currentMarks]);
       setCurrentMarks([]);
       setCount(data.count ?? count + 1);
+      const newSignCount = mySignCount + 1;
+      setMySignCount(newSignCount);
+      try { localStorage.setItem(storageKey, String(newSignCount)); } catch { /* noop */ }
       toast.success(
         "Your mark is on the shirt! 🎉",
         `It's now part of ${displayName}'s memories — forever.`
@@ -145,6 +166,22 @@ export default function SignExperience({
                 <p className="mt-1 text-sm text-violet-800/80">
                   Share your link with friends and let them leave their mark! 😊
                 </p>
+                <button
+                  onClick={() => {
+                    const stage = stageRef.current;
+                    if (!stage) return;
+                    const uri = stage.toDataURL({ pixelRatio: 2 });
+                    const link = document.createElement("a");
+                    link.download = `${username}-signout-shirt.png`;
+                    link.href = uri;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-violet-600/20 transition-all hover:bg-violet-700 active:scale-[0.98]"
+                >
+                  ⬇️ Download Shirt
+                </button>
               </div>
             ) : (
               <div></div>
@@ -167,8 +204,10 @@ export default function SignExperience({
                 tool={tool}
                 color={color}
                 size={size}
+                stamp={stamp}
                 textRotation={textRotation}
                 setTextRotation={setTextRotation}
+                onStageRef={(node) => { stageRef.current = node; }}
               />
             </div>
             <div className="mt-4 flex justify-center">
@@ -190,26 +229,37 @@ export default function SignExperience({
                 setTool={setTool}
                 onUndo={undo}
                 canUndo={currentMarks.length > 0}
+                stamp={stamp}
+                setStamp={setStamp}
                 textRotation={textRotation}
                 setTextRotation={setTextRotation}
               />
               <div className="hidden lg:block">
-                <button
-                  onClick={save}
-                  disabled={currentMarks.length === 0 || saving}
-                  className="mt-5 w-full rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-600/25 transition-all hover:bg-violet-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {saving ? (
-                    <span className="inline-flex items-center justify-center gap-2">
-                      <Spinner className="text-base" /> Saving…
-                    </span>
-                  ) : (
-                    "✓ Save Signature"
-                  )}
-                </button>
-                <p className="mt-2.5 text-center text-xs text-slate-400">
-                  🔒 Your signature will be added to the shirt permanently.
-                </p>
+                {reachedLimit ? (
+                  <div className="mt-5 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-center">
+                    <p className="text-sm font-semibold text-amber-800">You’ve used your 2 signatures ✨</p>
+                    <p className="mt-0.5 text-xs text-amber-600">Thanks for leaving your mark!</p>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      onClick={save}
+                      disabled={currentMarks.length === 0 || saving}
+                      className="mt-5 w-full rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-600/25 transition-all hover:bg-violet-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {saving ? (
+                        <span className="inline-flex items-center justify-center gap-2">
+                          <Spinner className="text-base" /> Saving…
+                        </span>
+                      ) : (
+                        "✓ Save Signature"
+                      )}
+                    </button>
+                    <p className="mt-2.5 text-center text-xs text-slate-400">
+                      {remainingSigns} signature{remainingSigns === 1 ? "" : "s"} remaining · 🔒 saved permanently
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </aside>
@@ -218,32 +268,42 @@ export default function SignExperience({
 
       {/* Mobile action bar: Undo + Save always within thumb reach */}
       <div className="fixed inset-x-0 bottom-0 z-30 lg:hidden">
-        <div
-          className="flex items-center gap-3 border-t border-slate-200/80 bg-white/95 px-4 pt-3 backdrop-blur"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
-        >
-          <button
-            onClick={undo}
-            disabled={currentMarks.length === 0}
-            aria-label="Undo"
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-lg transition-colors active:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+        {reachedLimit ? (
+          <div
+            className="border-t border-amber-200 bg-amber-50/95 px-4 py-3 text-center backdrop-blur"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
           >
-            ↩️
-          </button>
-          <button
-            onClick={save}
-            disabled={currentMarks.length === 0 || saving}
-            className="h-12 flex-1 rounded-xl bg-violet-600 text-sm font-semibold text-white shadow-lg shadow-violet-600/25 transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+            <p className="text-sm font-semibold text-amber-800">You’ve used your 2 signatures ✨</p>
+            <p className="mt-0.5 text-xs text-amber-600">Thanks for leaving your mark!</p>
+          </div>
+        ) : (
+          <div
+            className="flex items-center gap-3 border-t border-slate-200/80 bg-white/95 px-4 pt-3 backdrop-blur"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
           >
-            {saving ? (
-              <span className="inline-flex items-center justify-center gap-2">
-                <Spinner className="text-base" /> Saving…
-              </span>
-            ) : (
-              "✓ Save Signature"
-            )}
-          </button>
-        </div>
+            <button
+              onClick={undo}
+              disabled={currentMarks.length === 0}
+              aria-label="Undo"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-lg transition-colors active:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              ↩️
+            </button>
+            <button
+              onClick={save}
+              disabled={currentMarks.length === 0 || saving}
+              className="h-12 flex-1 rounded-xl bg-violet-600 text-sm font-semibold text-white shadow-lg shadow-violet-600/25 transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {saving ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <Spinner className="text-base" /> Saving…
+                </span>
+              ) : (
+                `✓ Save (${remainingSigns} left)`
+              )}
+            </button>
+          </div>
+        )}
       </div>
 
       <footer className="hidden px-4 py-6 text-center text-sm text-slate-400 lg:block">

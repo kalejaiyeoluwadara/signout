@@ -1,6 +1,7 @@
 "use client";
 
 import { INK_COLORS, BRUSH_SIZES, type Tool } from "@/lib/types";
+import { STAMPS, type StampId } from "@/lib/stamps";
 
 type Props = {
   color: string;
@@ -11,6 +12,8 @@ type Props = {
   setTool: (t: Tool) => void;
   onUndo: () => void;
   canUndo: boolean;
+  stamp: StampId;
+  setStamp: (s: StampId) => void;
   textRotation: number;
   setTextRotation: (r: number) => void;
 };
@@ -24,6 +27,8 @@ export default function Toolbar({
   setTool,
   onUndo,
   canUndo,
+  stamp,
+  setStamp,
   textRotation,
   setTextRotation,
 }: Props) {
@@ -127,6 +132,39 @@ export default function Toolbar({
             </kbd>
           </button>
         </div>
+      </div>
+
+      {/* Stickers: tap one, then tap the shirt to stamp it in your ink color */}
+      <div className="sm:col-span-2 lg:col-span-1">
+        <p className="mb-2.5 text-sm font-semibold text-slate-800">Stickers</p>
+        <div className="flex flex-wrap gap-1.5">
+          {STAMPS.map((s) => {
+            const active = tool === "stamp" && stamp === s.id;
+            return (
+              <button
+                key={s.id}
+                onClick={() => {
+                  setStamp(s.id);
+                  setTool("stamp");
+                }}
+                aria-label={`${s.label} sticker`}
+                title={s.label}
+                className={`flex h-8 w-8 items-center justify-center rounded-lg border text-base transition-all hover:scale-105 ${
+                  active
+                    ? "border-violet-500 bg-violet-50 ring-2 ring-violet-100"
+                    : "border-slate-200 bg-white hover:border-violet-300"
+                }`}
+              >
+                {s.icon}
+              </button>
+            );
+          })}
+        </div>
+        {tool === "stamp" && (
+          <p className="mt-2 text-xs text-slate-500">
+            Tap the shirt to place it — drawn in your ink color ✍️
+          </p>
+        )}
       </div>
 
       {/* Text rotation controls */}
