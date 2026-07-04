@@ -6,6 +6,8 @@ import ShirtBoard from "@/components/canvas/ShirtBoardLazy";
 import Toolbar from "@/components/Toolbar";
 import CopyLinkButton from "@/components/CopyLinkButton";
 import Logo from "@/components/Logo";
+import Spinner from "@/components/Spinner";
+import { toast } from "@/components/toast/Toaster";
 import { INK_COLORS, BRUSH_SIZES, type Mark, type Tool } from "@/lib/types";
 
 type Props = {
@@ -33,7 +35,6 @@ export default function SignExperience({
   const [tool, setTool] = useState<Tool>("draw");
   const [textRotation, setTextRotation] = useState<number>(0);
   const [saving, setSaving] = useState(false);
-  const [notice, setNotice] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
 
   const undo = useCallback(() => {
     setCurrentMarks((prev) => prev.slice(0, -1));
@@ -53,7 +54,6 @@ export default function SignExperience({
   const save = async () => {
     if (currentMarks.length === 0 || saving) return;
     setSaving(true);
-    setNotice(null);
     try {
       const res = await fetch(`/api/shirts/${username}/signatures`, {
         method: "POST",
@@ -68,15 +68,17 @@ export default function SignExperience({
       setSavedMarks((prev) => [...prev, ...currentMarks]);
       setCurrentMarks([]);
       setCount(data.count ?? count + 1);
-      setNotice({ kind: "ok", text: "Your mark is on the shirt — forever! 🎉" });
+      toast.success(
+        "Your mark is on the shirt! 🎉",
+        `It's now part of ${displayName}'s memories — forever.`
+      );
     } catch (err) {
-      setNotice({
-        kind: "err",
-        text: err instanceof Error ? err.message : "Could not save your signature.",
-      });
+      toast.error(
+        "Couldn't save your signature",
+        err instanceof Error ? err.message : "Please try again in a moment."
+      );
     } finally {
       setSaving(false);
-      setTimeout(() => setNotice(null), 4000);
     }
   };
 
@@ -106,7 +108,7 @@ export default function SignExperience({
       <main className="mx-auto w-full max-w-7xl flex-1 px-3 py-4 pb-28 sm:px-6 sm:py-6 lg:pb-6">
         <div className="grid gap-4 sm:gap-6 lg:grid-cols-[260px_minmax(0,1fr)_290px]">
           {/* Left sidebar */}
-          <aside className="order-3 flex flex-col gap-4 lg:order-1">
+          <aside className="order-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:order-1 lg:flex lg:flex-col">
             <div className="rounded-3xl border border-slate-200/70 bg-white p-6 text-center shadow-sm">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-violet-100 text-2xl font-bold text-violet-700">
                 {displayName.charAt(0).toUpperCase()}
@@ -136,7 +138,7 @@ export default function SignExperience({
             </div>
 
             {mode === "owner" ? (
-              <div className="rounded-3xl bg-violet-50 p-5">
+              <div className="rounded-3xl bg-violet-50 p-5 sm:col-span-2 lg:col-span-1">
                 <p className="text-sm font-semibold text-violet-900">
                   💜 This is your space
                 </p>
@@ -157,7 +159,7 @@ export default function SignExperience({
                 ✍️ — draw or type anywhere on the shirt!
               </p>
             </div>
-            <div className="rounded-3xl bg-linear-to-b from-white to-slate-100/60 p-2 shadow-[0_20px_60px_-20px_rgba(80,70,180,0.25)] sm:rounded-4xl sm:p-6">
+            <div className="-mx-3 bg-linear-to-b from-white to-slate-100/60 p-1 shadow-[0_20px_60px_-20px_rgba(80,70,180,0.25)] sm:mx-0 sm:rounded-4xl sm:p-6">
               <ShirtBoard
                 savedMarks={savedMarks}
                 currentMarks={currentMarks}
@@ -197,20 +199,17 @@ export default function SignExperience({
                   disabled={currentMarks.length === 0 || saving}
                   className="mt-5 w-full rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-600/25 transition-all hover:bg-violet-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  {saving ? "Saving…" : "✓ Save Signature"}
+                  {saving ? (
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <Spinner className="text-base" /> Saving…
+                    </span>
+                  ) : (
+                    "✓ Save Signature"
+                  )}
                 </button>
                 <p className="mt-2.5 text-center text-xs text-slate-400">
                   🔒 Your signature will be added to the shirt permanently.
                 </p>
-                {notice && (
-                  <p
-                    className={`mt-2 text-center text-xs font-medium ${
-                      notice.kind === "ok" ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
-                    {notice.text}
-                  </p>
-                )}
               </div>
             </div>
           </aside>
@@ -219,17 +218,6 @@ export default function SignExperience({
 
       {/* Mobile action bar: Undo + Save always within thumb reach */}
       <div className="fixed inset-x-0 bottom-0 z-30 lg:hidden">
-        {notice && (
-          <p
-            className={`mx-4 mb-2 rounded-xl px-4 py-2 text-center text-xs font-medium shadow-md backdrop-blur ${
-              notice.kind === "ok"
-                ? "bg-green-50/95 text-green-700"
-                : "bg-red-50/95 text-red-600"
-            }`}
-          >
-            {notice.text}
-          </p>
-        )}
         <div
           className="flex items-center gap-3 border-t border-slate-200/80 bg-white/95 px-4 pt-3 backdrop-blur"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
@@ -247,12 +235,18 @@ export default function SignExperience({
             disabled={currentMarks.length === 0 || saving}
             className="h-12 flex-1 rounded-xl bg-violet-600 text-sm font-semibold text-white shadow-lg shadow-violet-600/25 transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {saving ? "Saving…" : "✓ Save Signature"}
+            {saving ? (
+              <span className="inline-flex items-center justify-center gap-2">
+                <Spinner className="text-base" /> Saving…
+              </span>
+            ) : (
+              "✓ Save Signature"
+            )}
           </button>
         </div>
       </div>
 
-      <footer className="py-6 text-center text-sm text-slate-400">
+      <footer className="hidden px-4 py-6 text-center text-sm text-slate-400 lg:block">
         Made with 💜 by Dara and Rex for memories —{" "}
         <span className="font-hand text-base text-slate-500">
           “The best memories are the ones we create together.”

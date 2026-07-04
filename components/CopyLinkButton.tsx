@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "@/components/toast/Toaster";
 
 export default function CopyLinkButton({
   username,
@@ -12,12 +13,14 @@ export default function CopyLinkButton({
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
+    const link = `${window.location.origin}/${username}`;
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}/${username}`);
+      await navigator.clipboard.writeText(link);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
+      toast.success("Link copied! 🔗", "Share it with friends so they can sign your shirt.");
     } catch {
-      /* clipboard unavailable */
+      toast.error("Couldn't copy the link", `Copy it manually: ${link}`);
     }
   };
 
