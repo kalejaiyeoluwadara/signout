@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useEffect, useRef, useState } from "react";
-import { Stage, Layer, Line, Text, Image as KonvaImage } from "react-konva";
+import { Stage, Layer, Group, Line, Text, Image as KonvaImage } from "react-konva";
 import type Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import type { Mark, TextItem, Tool } from "@/lib/types";
@@ -16,6 +16,41 @@ const MAX_STROKE_LEN = 1400; // logical px — stops shirt-crossing lines
 const CROWD_FLOOR = 0.6; // new marks never shrink below 60%
 const CROWD_FULL_AT = 450; // marks on the shirt at which shrink bottoms out
 
+/* Clip path matching the exact SVG shirt outline (#tee path).
+   SVG viewBox is 0 0 1000 1150 but the canvas is 1000×1000,
+   so every Y coordinate is scaled by S = 1000/1150 ≈ 0.8696. */
+const S = BASE_H / 1150;
+type ClipCtx = Pick<
+  CanvasRenderingContext2D,
+  "beginPath" | "moveTo" | "bezierCurveTo" | "lineTo" | "closePath"
+>;
+const shirtClip = (ctx: ClipCtx) => {
+  ctx.beginPath();
+  // Start: left collar
+  ctx.moveTo(395, 132 * S);
+  // Left shoulder → left sleeve
+  ctx.bezierCurveTo(352, 138 * S, 302, 148 * S, 258, 168 * S);
+  ctx.bezierCurveTo(186, 210 * S, 128, 296 * S, 100, 392 * S);
+  // Sleeve hem
+  ctx.lineTo(233, 468 * S);
+  ctx.bezierCurveTo(258, 444 * S, 276, 430 * S, 292, 418 * S);
+  // Left body
+  ctx.bezierCurveTo(282, 636 * S, 280, 878 * S, 288, 1078 * S);
+  // Bottom hem
+  ctx.bezierCurveTo(420, 1092 * S, 580, 1092 * S, 712, 1078 * S);
+  // Right body
+  ctx.bezierCurveTo(720, 878 * S, 718, 636 * S, 708, 418 * S);
+  // Right sleeve
+  ctx.bezierCurveTo(724, 430 * S, 742, 444 * S, 767, 468 * S);
+  ctx.lineTo(900, 392 * S);
+  // Right shoulder
+  ctx.bezierCurveTo(872, 296 * S, 814, 210 * S, 742, 168 * S);
+  ctx.bezierCurveTo(698, 148 * S, 648, 138 * S, 605, 132 * S);
+  // Collar
+  ctx.bezierCurveTo(570, 196 * S, 430, 196 * S, 395, 132 * S);
+  ctx.closePath();
+};
+
 type Props = {
   savedMarks: Mark[];
   currentMarks: Mark[];
@@ -29,8 +64,15 @@ type Props = {
   onStageRef?: (stage: Konva.Stage | null) => void;
 };
 
-/* Marker-ink look: multiply blending sinks the ink into the fabric shading,
-   a soft same-color shadow gives a slight bleed like a real marker. */
+/* Stable per-mark "hand pressure": each mark gets a slightly different ink
+   density so nothing looks uniformly printed. Seeded from the mark's own
+   geometry so it never changes between renders or page loads. */
+const pressure = (seed: number) => 0.82 + (Math.abs(Math.round(seed)) % 10) * 0.012;
+
+/* Marker-ink look. Everything lives on ONE canvas with the shirt photo, so
+   'multiply' blends the ink with the real fabric pixels — wrinkle shadows
+   darken the ink exactly like cloth would. The same-color shadow adds the
+   soft bleed of a real marker soaking into fibres. */
 const inkProps = (points: number[], color: string, size: number) => ({
   points,
   stroke: color,
@@ -38,11 +80,11 @@ const inkProps = (points: number[], color: string, size: number) => ({
   lineCap: "round" as const,
   lineJoin: "round" as const,
   tension: 0.45,
-  opacity: 0.92,
+  opacity: pressure(points.length * 31 + (points[0] ?? 0) * 100),
   globalCompositeOperation: "multiply" as const,
   shadowColor: color,
-  shadowBlur: size * 0.45,
-  shadowOpacity: 0.28,
+  shadowBlur: size * 0.55,
+  shadowOpacity: 0.3,
   perfectDrawEnabled: false,
   listening: false,
 });
@@ -55,11 +97,11 @@ const textProps = (t: TextItem, fontFamily: string) => ({
   fontFamily,
   fill: t.color,
   rotation: t.rotate,
-  opacity: 0.92,
+  opacity: pressure(t.text.length * 37 + t.x * 100),
   globalCompositeOperation: "multiply" as const,
   shadowColor: t.color,
-  shadowBlur: t.fontSize * 0.12,
-  shadowOpacity: 0.2,
+  shadowBlur: t.fontSize * 0.14,
+  shadowOpacity: 0.22,
   perfectDrawEnabled: false,
   listening: false,
 });
@@ -99,8 +141,7 @@ export default function ShirtBoard({
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
-  const savedLayerRef = useRef<Konva.Layer>(null);
-  const liveLayerRef = useRef<Konva.Layer>(null);
+  const inkLayerRef = useRef<Konva.Layer>(null);
   const drawingRef = useRef(false);
   const strokeLenRef = useRef(0);
   const warnedLongStrokeRef = useRef(false);
@@ -147,8 +188,7 @@ export default function ShirtBoard({
 
   useEffect(() => {
     document.fonts?.ready?.then(() => {
-      savedLayerRef.current?.batchDraw();
-      liveLayerRef.current?.batchDraw();
+      inkLayerRef.current?.batchDraw();
     });
   }, []);
 
@@ -159,15 +199,6 @@ export default function ShirtBoard({
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-
-  // Blend the ink layers' canvases with the shirt layer beneath them,
-  // so strokes pick up the fabric's wrinkles and shading in real time.
-  useEffect(() => {
-    for (const ref of [savedLayerRef, liveLayerRef]) {
-      const canvas = ref.current?.getCanvas()._canvas;
-      if (canvas) canvas.style.mixBlendMode = "multiply";
-    }
-  }, [shirtImg, width]);
 
   const scale = width / BASE_W;
 
@@ -365,16 +396,30 @@ export default function ShirtBoard({
                     : "crosshair",
           }}
         >
-          <Layer listening={false}>
+          {/* One canvas for shirt + ink: 'multiply' blends the ink with the
+              real fabric pixels, and the final 'lighten' pass lets the weave
+              texture and highlights show back through the ink. It also means
+              exports (toDataURL) capture the exact blended result. */}
+          <Layer ref={inkLayerRef} listening={false}>
             {shirtImg && (
               <KonvaImage image={shirtImg} width={BASE_W} height={BASE_H} />
             )}
-          </Layer>
-          <Layer ref={savedLayerRef} listening={false}>
-            <MarksLayer marks={savedMarks} fontFamily={fontFamily} />
-          </Layer>
-          <Layer ref={liveLayerRef} listening={false}>
-            <MarksLayer marks={currentMarks} fontFamily={fontFamily} />
+            <Group clipFunc={shirtClip}>
+              <MarksLayer marks={savedMarks} fontFamily={fontFamily} />
+            </Group>
+            <Group clipFunc={shirtClip}>
+              <MarksLayer marks={currentMarks} fontFamily={fontFamily} />
+            </Group>
+            {shirtImg && (
+              <KonvaImage
+                image={shirtImg}
+                width={BASE_W}
+                height={BASE_H}
+                globalCompositeOperation="lighten"
+                opacity={0.16}
+                listening={false}
+              />
+            )}
           </Layer>
         </Stage>
       )}
