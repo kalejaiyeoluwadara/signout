@@ -28,7 +28,7 @@ const inkProps = (points: number[], color: string, size: number) => ({
   strokeWidth: size,
   lineCap: "round" as const,
   lineJoin: "round" as const,
-  tension: 0.35,
+  tension: 0.45,
   opacity: 0.92,
   globalCompositeOperation: "multiply" as const,
   shadowColor: color,
@@ -243,12 +243,22 @@ export default function ShirtBoard({
       const last = prev[lastIdx];
       if (!last || last.kind !== "stroke") return prev;
       const pts = last.stroke.points;
-      const dx = pos.x - pts[pts.length - 2];
-      const dy = pos.y - pts[pts.length - 1];
-      if (dx * dx + dy * dy < 6) return prev;
+      
+      const lastX = pts[pts.length - 2];
+      const lastY = pts[pts.length - 1];
+      
+      // Apply exponential moving average (low-pass filter) to smooth out raw tremors/jitters
+      const smoothingFactor = 0.35;
+      const smoothedX = lastX + (pos.x - lastX) * smoothingFactor;
+      const smoothedY = lastY + (pos.y - lastY) * smoothingFactor;
+      
+      const dx = smoothedX - lastX;
+      const dy = smoothedY - lastY;
+      if (dx * dx + dy * dy < 4) return prev;
+      
       const updated: Mark = {
         kind: "stroke",
-        stroke: { ...last.stroke, points: [...pts, pos.x, pos.y] },
+        stroke: { ...last.stroke, points: [...pts, smoothedX, smoothedY] },
       };
       return [...prev.slice(0, lastIdx), updated];
     });
@@ -321,7 +331,7 @@ export default function ShirtBoard({
             placeholder="Type your message…"
             className="font-hand rounded-md border border-violet-300 bg-white/95 px-2.5 py-1.5 shadow-md outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
             style={{
-              fontSize: Math.max(14, size * 3.2 * scale),
+              fontSize: Math.max(16, size * 3.2 * scale),
               color,
               transform: `rotate(${textRotation}deg)`,
               transformOrigin: "left center",

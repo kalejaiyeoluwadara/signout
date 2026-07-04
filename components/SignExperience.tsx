@@ -106,7 +106,7 @@ export default function SignExperience({
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6">
         <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)_290px]">
           {/* Left sidebar */}
-          <aside className="order-2 flex flex-col gap-4 lg:order-1">
+          <aside className="order-3 flex flex-col gap-4 lg:order-1">
             <div className="rounded-3xl border border-slate-200/70 bg-white p-6 text-center shadow-sm">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-violet-100 text-2xl font-bold text-violet-700">
                 {displayName.charAt(0).toUpperCase()}
@@ -145,14 +145,7 @@ export default function SignExperience({
                 </p>
               </div>
             ) : (
-              <div className="rounded-3xl bg-violet-50 p-5">
-                <p className="text-sm font-semibold text-violet-900">
-                  ✍️ Leave your mark
-                </p>
-                <p className="mt-1 text-sm text-violet-800/80">
-                  Drop your messages, doodles and good vibes for {displayName}!
-                </p>
-              </div>
+              <div></div>
             )}
           </aside>
 
@@ -178,13 +171,13 @@ export default function SignExperience({
             </div>
             <div className="mt-4 flex justify-center">
               <span className="inline-flex items-center gap-2 rounded-full bg-violet-100/80 px-4 py-2 text-sm font-semibold text-violet-800">
-                👥 {count} signature{count === 1 ? "" : "s"} so far
+                {count} signature{count === 1 ? "" : "s"} so far
               </span>
             </div>
           </section>
 
           {/* Tools */}
-          <aside className="order-3 flex flex-col gap-4">
+          <aside className="order-2 flex flex-col gap-4 lg:order-3">
             <div className="rounded-3xl border border-slate-200/70 bg-white p-5 shadow-sm lg:sticky lg:top-20">
               <Toolbar
                 color={color}

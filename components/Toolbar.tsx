@@ -28,7 +28,8 @@ export default function Toolbar({
   setTextRotation,
 }: Props) {
   return (
-    <div className="flex flex-col gap-5">
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:flex lg:flex-col lg:gap-5">
+      {/* Color picker */}
       <div>
         <p className="mb-2.5 text-sm font-semibold text-slate-800">Pick a color</p>
         <div className="flex flex-wrap items-center gap-2.5">
@@ -64,6 +65,7 @@ export default function Toolbar({
         </div>
       </div>
 
+      {/* Brush size */}
       <div>
         <p className="mb-2.5 text-sm font-semibold text-slate-800">Brush size</p>
         <div className="flex gap-2.5">
@@ -87,45 +89,50 @@ export default function Toolbar({
         </div>
       </div>
 
-      <div>
+      {/* Tools */}
+      <div className="sm:col-span-2 lg:col-span-1">
         <p className="mb-2.5 text-sm font-semibold text-slate-800">Tools</p>
-        <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row lg:flex-col">
           <ToolButton
             active={tool === "draw"}
             onClick={() => setTool("draw")}
             icon="✍️"
             label="Draw"
+            className="flex-1"
           />
           <ToolButton
             active={tool === "text"}
             onClick={() => setTool("text")}
             icon="🔤"
             label="Add Text"
+            className="flex-1"
           />
           <ToolButton
             active={tool === "eraser"}
             onClick={() => setTool("eraser")}
             icon="🧽"
             label="Eraser"
+            className="flex-1"
           />
           <button
             onClick={onUndo}
             disabled={!canUndo}
-            className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-violet-300 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex flex-1 items-center justify-center gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-violet-300 disabled:cursor-not-allowed disabled:opacity-40 lg:justify-between"
           >
             <span className="flex items-center gap-2.5">
               <span aria-hidden>↩️</span> Undo
             </span>
-            <kbd className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-500">
+            <kbd className="hidden rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-500 lg:inline-block">
               Ctrl + Z
             </kbd>
           </button>
         </div>
       </div>
 
+      {/* Text rotation controls */}
       {tool === "text" && (
         <div
-          className="rounded-2xl border border-slate-150 bg-slate-50/50 p-4 shadow-xs"
+          className="rounded-2xl border border-slate-150 bg-slate-50/50 p-4 shadow-xs sm:col-span-2 lg:col-span-1"
           onMouseDown={(e) => e.preventDefault()}
           onTouchStart={(e) => e.preventDefault()}
         >
@@ -169,7 +176,7 @@ export default function Toolbar({
         </div>
       )}
 
-      <div className="rounded-2xl bg-violet-50 p-3.5 text-sm text-violet-900">
+      <div className="rounded-2xl bg-violet-50 p-3.5 text-sm text-violet-900 sm:col-span-2 lg:col-span-1">
         <p className="font-semibold">💡 Tip</p>
         <p className="mt-0.5 text-violet-800/80">
           Draw your signature or write a message — the eraser only clears your
@@ -185,20 +192,22 @@ function ToolButton({
   onClick,
   icon,
   label,
+  className = "",
 }: {
   active: boolean;
   onClick: () => void;
   icon: string;
   label: string;
+  className?: string;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2.5 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
+      className={`flex items-center justify-center lg:justify-start gap-2.5 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
         active
           ? "border-violet-500 bg-violet-50 text-violet-700 ring-2 ring-violet-100"
           : "border-slate-200 bg-white text-slate-700 hover:border-violet-300"
-      }`}
+      } ${className}`}
     >
       <span aria-hidden>{icon}</span> {label}
     </button>
