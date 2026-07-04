@@ -68,27 +68,46 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section id="how-it-works" className="bg-white/70 py-16">
-          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
-            <h2 className="text-center text-3xl font-bold text-slate-900">
+        <section id="how-it-works" className="relative overflow-hidden py-24" style={{ background: "linear-gradient(180deg, #f4f4f8 0%, #ede9fe 50%, #f4f4f8 100%)" }}>
+          {/* Decorative background blobs */}
+          <div className="pointer-events-none absolute -left-40 -top-40 h-80 w-80 rounded-full bg-violet-200/30 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-40 -right-40 h-80 w-80 rounded-full bg-violet-300/20 blur-3xl" />
+
+          <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
+            <p className="text-center font-hand text-xl text-violet-500">simple as 1-2-3 ✨</p>
+            <h2 className="mt-2 text-center text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
               How it works
             </h2>
-            <p className="mt-2 text-center text-slate-500">
-              Three steps to your forever shirt.
+            <p className="mx-auto mt-3 max-w-md text-center text-base text-slate-500">
+              Three steps to your forever shirt — no markers, no mess, just memories.
             </p>
-            <div className="mt-10 grid gap-6 sm:grid-cols-3">
+
+            <div className="relative mt-16 grid gap-8 sm:grid-cols-3">
+              {/* Connecting line between steps (visible on sm+) */}
+              <div className="pointer-events-none absolute left-[16.67%] right-[16.67%] top-10 hidden h-0.5 sm:block" style={{ backgroundImage: "repeating-linear-gradient(90deg, #c4b5fd 0, #c4b5fd 8px, transparent 8px, transparent 16px)" }} />
+
               {steps.map((s, i) => (
                 <div
                   key={i}
-                  className="rounded-3xl border border-slate-200/70 bg-white p-7 shadow-sm transition-shadow hover:shadow-md"
+                  className="group relative flex flex-col items-center text-center"
                 >
-                  <span className="text-3xl">{s.icon}</span>
-                  <h3 className="mt-3 font-bold text-slate-900">
-                    {i + 1}. {s.title}
-                  </h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
-                    {s.text}
-                  </p>
+                  {/* Step number circle */}
+                  <div className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full shadow-lg transition-transform duration-300 group-hover:scale-110" style={{ background: "linear-gradient(135deg, #7c3aed, #a78bfa)" }}>
+                    <span className="text-3xl">{s.icon}</span>
+                  </div>
+                  <span className="mt-1.5 text-xs font-bold uppercase tracking-widest text-violet-400">
+                    Step {i + 1}
+                  </span>
+
+                  {/* Card */}
+                  <div className="mt-4 w-full rounded-2xl border border-white/60 bg-white/70 px-6 py-6 shadow-md backdrop-blur-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl">
+                    <h3 className="text-lg font-bold text-slate-900">
+                      {s.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-500">
+                      {s.text}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>

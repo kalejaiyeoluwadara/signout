@@ -59,7 +59,7 @@ export default function CreateShirtForm() {
           onChange={(e) => onNameChange(e.target.value)}
           required
           maxLength={50}
-          placeholder="e.g. Dara Kalejaiye"
+          placeholder="e.g. Akara"
           className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition-colors focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
         />
       </label>
@@ -75,7 +75,7 @@ export default function CreateShirtForm() {
           required
           minLength={3}
           maxLength={20}
-          placeholder="e.g. dara"
+          placeholder="e.g. akara"
           className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 font-mono text-sm outline-none transition-colors focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
         />
       </label>
