@@ -243,22 +243,18 @@ export default function ShirtBoard({
       const last = prev[lastIdx];
       if (!last || last.kind !== "stroke") return prev;
       const pts = last.stroke.points;
-      
+
       const lastX = pts[pts.length - 2];
       const lastY = pts[pts.length - 1];
-      
-      // Apply exponential moving average (low-pass filter) to smooth out raw tremors/jitters
-      const smoothingFactor = 0.35;
-      const smoothedX = lastX + (pos.x - lastX) * smoothingFactor;
-      const smoothedY = lastY + (pos.y - lastY) * smoothingFactor;
-      
-      const dx = smoothedX - lastX;
-      const dy = smoothedY - lastY;
-      if (dx * dx + dy * dy < 4) return prev;
-      
+
+      // Skip if the pointer barely moved (avoids flooding with redundant points)
+      const dx = pos.x - lastX;
+      const dy = pos.y - lastY;
+      if (dx * dx + dy * dy < 9) return prev;
+
       const updated: Mark = {
         kind: "stroke",
-        stroke: { ...last.stroke, points: [...pts, smoothedX, smoothedY] },
+        stroke: { ...last.stroke, points: [...pts, pos.x, pos.y] },
       };
       return [...prev.slice(0, lastIdx), updated];
     });
@@ -311,8 +307,15 @@ export default function ShirtBoard({
           ref={editorRef}
           className="absolute z-10 flex flex-col gap-2"
           style={{
-            left: pendingText.left,
-            top: pendingText.top - size * 3.2 * scale * 0.8,
+            // Keep the editor inside the canvas even when tapping near an edge
+            left: Math.max(4, Math.min(pendingText.left, width - 184)),
+            top: Math.max(
+              4,
+              Math.min(
+                pendingText.top - size * 3.2 * scale * 0.8,
+                width * (BASE_H / BASE_W) - 96
+              )
+            ),
           }}
         >
           <input
@@ -336,6 +339,7 @@ export default function ShirtBoard({
               transform: `rotate(${textRotation}deg)`,
               transformOrigin: "left center",
               minWidth: "160px",
+              maxWidth: Math.max(160, width - 24),
               transition: "transform 0.1s ease",
             }}
           />

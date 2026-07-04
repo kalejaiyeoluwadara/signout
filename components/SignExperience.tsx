@@ -89,7 +89,7 @@ export default function SignExperience({
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/85 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2.5 sm:px-6 sm:py-3">
           <Logo />
           <div className="flex items-center gap-4">
             <Link
@@ -103,8 +103,8 @@ export default function SignExperience({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6">
-        <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)_290px]">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-3 py-4 pb-28 sm:px-6 sm:py-6 lg:pb-6">
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-[260px_minmax(0,1fr)_290px]">
           {/* Left sidebar */}
           <aside className="order-3 flex flex-col gap-4 lg:order-1">
             <div className="rounded-3xl border border-slate-200/70 bg-white p-6 text-center shadow-sm">
@@ -151,13 +151,13 @@ export default function SignExperience({
 
           {/* Shirt */}
           <section className="order-1 lg:order-2">
-            <div className="mb-3 flex items-center justify-center gap-2 text-slate-600">
-              <p className="text-sm font-medium">
+            <div className="mb-2 flex items-center justify-center gap-2 px-2 text-center text-slate-600 sm:mb-3">
+              <p className="text-xs font-medium sm:text-sm">
                 <span className="font-semibold text-slate-800">Add your signature</span>{" "}
                 ✍️ — draw or type anywhere on the shirt!
               </p>
             </div>
-            <div className="rounded-4xl bg-linear-to-b from-white to-slate-100/60 p-3 shadow-[0_20px_60px_-20px_rgba(80,70,180,0.25)] sm:p-6">
+            <div className="rounded-3xl bg-linear-to-b from-white to-slate-100/60 p-2 shadow-[0_20px_60px_-20px_rgba(80,70,180,0.25)] sm:rounded-4xl sm:p-6">
               <ShirtBoard
                 savedMarks={savedMarks}
                 currentMarks={currentMarks}
@@ -191,29 +191,66 @@ export default function SignExperience({
                 textRotation={textRotation}
                 setTextRotation={setTextRotation}
               />
-              <button
-                onClick={save}
-                disabled={currentMarks.length === 0 || saving}
-                className="mt-5 w-full rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-600/25 transition-all hover:bg-violet-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {saving ? "Saving…" : "✓ Save Signature"}
-              </button>
-              <p className="mt-2.5 text-center text-xs text-slate-400">
-                🔒 Your signature will be added to the shirt permanently.
-              </p>
-              {notice && (
-                <p
-                  className={`mt-2 text-center text-xs font-medium ${
-                    notice.kind === "ok" ? "text-green-600" : "text-red-600"
-                  }`}
+              <div className="hidden lg:block">
+                <button
+                  onClick={save}
+                  disabled={currentMarks.length === 0 || saving}
+                  className="mt-5 w-full rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-600/25 transition-all hover:bg-violet-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  {notice.text}
+                  {saving ? "Saving…" : "✓ Save Signature"}
+                </button>
+                <p className="mt-2.5 text-center text-xs text-slate-400">
+                  🔒 Your signature will be added to the shirt permanently.
                 </p>
-              )}
+                {notice && (
+                  <p
+                    className={`mt-2 text-center text-xs font-medium ${
+                      notice.kind === "ok" ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    {notice.text}
+                  </p>
+                )}
+              </div>
             </div>
           </aside>
         </div>
       </main>
+
+      {/* Mobile action bar: Undo + Save always within thumb reach */}
+      <div className="fixed inset-x-0 bottom-0 z-30 lg:hidden">
+        {notice && (
+          <p
+            className={`mx-4 mb-2 rounded-xl px-4 py-2 text-center text-xs font-medium shadow-md backdrop-blur ${
+              notice.kind === "ok"
+                ? "bg-green-50/95 text-green-700"
+                : "bg-red-50/95 text-red-600"
+            }`}
+          >
+            {notice.text}
+          </p>
+        )}
+        <div
+          className="flex items-center gap-3 border-t border-slate-200/80 bg-white/95 px-4 pt-3 backdrop-blur"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
+        >
+          <button
+            onClick={undo}
+            disabled={currentMarks.length === 0}
+            aria-label="Undo"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-lg transition-colors active:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            ↩️
+          </button>
+          <button
+            onClick={save}
+            disabled={currentMarks.length === 0 || saving}
+            className="h-12 flex-1 rounded-xl bg-violet-600 text-sm font-semibold text-white shadow-lg shadow-violet-600/25 transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {saving ? "Saving…" : "✓ Save Signature"}
+          </button>
+        </div>
+      </div>
 
       <footer className="py-6 text-center text-sm text-slate-400">
         Made with 💜 by Dara and Rex for memories —{" "}

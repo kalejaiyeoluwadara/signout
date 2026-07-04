@@ -60,7 +60,7 @@ export default function CreateShirtForm() {
           required
           maxLength={50}
           placeholder="e.g. Akara"
-          className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition-colors focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+          className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-base outline-none transition-colors focus:border-violet-400 focus:ring-2 focus:ring-violet-100 sm:text-sm"
         />
       </label>
 
@@ -76,7 +76,7 @@ export default function CreateShirtForm() {
           minLength={3}
           maxLength={20}
           placeholder="e.g. akara"
-          className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 font-mono text-sm outline-none transition-colors focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+          className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 font-mono text-base outline-none transition-colors focus:border-violet-400 focus:ring-2 focus:ring-violet-100 sm:text-sm"
         />
       </label>
 

@@ -28,7 +28,7 @@ export default function Toolbar({
   setTextRotation,
 }: Props) {
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:flex lg:flex-col lg:gap-5">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:flex lg:flex-col lg:gap-5">
       {/* Color picker */}
       <div>
         <p className="mb-2.5 text-sm font-semibold text-slate-800">Pick a color</p>
@@ -38,7 +38,7 @@ export default function Toolbar({
               key={c}
               onClick={() => setColor(c)}
               aria-label={`Ink color ${c}`}
-              className={`flex h-9 w-9 items-center justify-center rounded-full transition-transform hover:scale-110 ${
+              className={`flex h-10 w-10 items-center justify-center rounded-full transition-transform hover:scale-110 sm:h-9 sm:w-9 ${
                 color === c ? "ring-2 ring-slate-900 ring-offset-2" : ""
               }`}
               style={{ backgroundColor: c }}
@@ -176,7 +176,7 @@ export default function Toolbar({
         </div>
       )}
 
-      <div className="rounded-2xl bg-violet-50 p-3.5 text-sm text-violet-900 sm:col-span-2 lg:col-span-1">
+      <div className="hidden rounded-2xl bg-violet-50 p-3.5 text-sm text-violet-900 sm:col-span-2 sm:block lg:col-span-1">
         <p className="font-semibold">💡 Tip</p>
         <p className="mt-0.5 text-violet-800/80">
           Draw your signature or write a message — the eraser only clears your
